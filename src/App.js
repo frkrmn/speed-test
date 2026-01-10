@@ -130,6 +130,19 @@ const SpeedTest = () => {
     setProgress(0);
 
     try {
+      // 0. Fetch User Network Info
+      let networkInfo = { isp: 'Detecting...', ip: '' };
+      try {
+        const netRes = await fetch('https://ipapi.co/json/');
+        const netData = await netRes.json();
+        networkInfo = {
+          isp: netData.org || netData.asn || 'Universal Host',
+          ip: netData.ip || ''
+        };
+      } catch (e) {
+        networkInfo = { isp: 'Local Network', ip: '' };
+      }
+
       // 1. Ping
       setCurrentTest('ping');
       const pings = [];
@@ -170,7 +183,8 @@ const SpeedTest = () => {
         download: parseFloat(downloadSpeed),
         upload: parseFloat(uploadSpeed),
         jitter,
-        server: 'Cloudflare Edge (Auto)',
+        server: networkInfo.isp,
+        ip: networkInfo.ip,
         timestamp: new Date().toLocaleString()
       };
 
@@ -349,6 +363,11 @@ const SpeedTest = () => {
                           <Globe className="w-5 h-5 text-indigo-400" />
                           {results.server}
                         </p>
+                        {results.ip && (
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                            IP: {results.ip}
+                          </p>
+                        )}
                       </div>
                       <button
                         onClick={runTest}
@@ -426,7 +445,7 @@ const SpeedTest = () => {
                 >
                   <div className="flex justify-between items-center mb-3">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">
-                      {new Date(test.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(test.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                      {new Date(test.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {test.server || 'Unknown Host'}
                     </span>
                     <TrendingUp className="w-3 h-3 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
