@@ -2,7 +2,7 @@
   "name": "intelligent-speed-test",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://frkrmn.github.io/speet-test",
+  "homepage": ".",
   "dependencies": {
     "clsx": "^2.1.1",
     "framer-motion": "^12.25.0",
@@ -18,8 +18,11 @@
     "deploy": "gh-pages -d build"
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.23",
     "gh-pages": "^6.1.0",
-    "react-scripts": "5.0.1"
+    "postcss": "^8.5.6",
+    "react-scripts": "5.0.1",
+    "tailwindcss": "^4.1.18"
   },
   "browserslist": {
     "production": [
