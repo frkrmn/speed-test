@@ -146,37 +146,46 @@ const SpeedTest = () => {
       // 1. Ping
       setCurrentTest('ping');
       const pings = [];
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 5; i++) {
         const start = performance.now();
         await fetch('https://www.cloudflare.com/cdn-cgi/trace', { method: 'HEAD', cache: 'no-store' });
         pings.push(performance.now() - start);
-        setProgress((prev) => prev + 10);
+        setProgress((prev) => prev + 6);
       }
       const ping = Math.round(pings.reduce((a, b) => a + b) / pings.length);
-      const jitter = Math.round(Math.max(...pings) - Math.min(...pings));
+      const sortedPings = [...pings].sort((a, b) => a - b);
+      const jitter = Math.round(sortedPings[sortedPings.length - 1] - sortedPings[0]);
 
-      // 2. Download
+      // 2. Download (Increased to 25MB for more accurate high-speed measurement)
       setCurrentTest('download');
+      const downloadSize = 25000000;
       const downloadStart = performance.now();
-      const response = await fetch('https://speed.cloudflare.com/__down?bytes=5000000', { cache: 'no-store' });
+      const response = await fetch(`https://speed.cloudflare.com/__down?bytes=${downloadSize}`, { cache: 'no-store' });
       const reader = response.body.getReader();
       let received = 0;
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         received += value.length;
-        setProgress(30 + (received / 5000000) * 40);
+        setProgress(30 + (received / downloadSize) * 40);
       }
       const downloadTime = (performance.now() - downloadStart) / 1000;
-      const downloadSpeed = ((5000000 * 8) / downloadTime / 1000000).toFixed(1);
+      const downloadSpeed = ((downloadSize * 8) / downloadTime / 1000000).toFixed(1);
 
-      // 3. Upload (Simulated with realistic patterns)
+      // 3. Real Upload Test (Using POST to Cloudflare)
       setCurrentTest('upload');
-      for (let i = 0; i < 20; i++) {
-        await new Promise(r => setTimeout(r, 50));
-        setProgress(70 + (i * 1.5));
-      }
-      const uploadSpeed = (downloadSpeed * (0.3 + Math.random() * 0.4)).toFixed(1);
+      const uploadSize = 5000000; // 5MB for upload
+      const uploadData = new Uint8Array(uploadSize);
+      crypto.getRandomValues(uploadData);
+
+      const uploadStart = performance.now();
+      await fetch('https://speed.cloudflare.com/__up', {
+        method: 'POST',
+        body: uploadData,
+        cache: 'no-store'
+      });
+      const uploadTime = (performance.now() - uploadStart) / 1000;
+      const uploadSpeed = ((uploadSize * 8) / uploadTime / 1000000).toFixed(1);
 
       const finalResults = {
         ping,
